@@ -4,7 +4,7 @@ ENV TZ Europe/Berlin
 WORKDIR /srv
 
 RUN apk update && apk add --no-cache bash \
-    tzdata groff less python curl mlocate groff openssl
+    tzdata less python curl mlocate groff openssl
 
 RUN curl -O https://bootstrap.pypa.io/get-pip.py \
     && python get-pip.py \
