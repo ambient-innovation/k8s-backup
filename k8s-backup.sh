@@ -27,12 +27,8 @@ function get_deployment {
   kubectl get deployment -n ${1} -o=yaml --export | sed -e '/deployment\.kubernetes\.io\/revision: "[0-9]\+"/d' -e '/kubectl\.kubernetes\.io\/last\-applied\-configuration:/,+1d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/status:/,+18d'
 }
 
-function get_job {
-
-}
-
 function get_cronjob {
-
+  kubectl get cronjob -n ${1} -o=yaml --export | sed -e '/kubectl\.kubernetes\.io\/last\-applied\-configuration:/,+1d' -e '/status:/,+1d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
 function export_ns {
@@ -44,7 +40,7 @@ function export_ns {
      echo "+++++++++++++++++++++++++"
      mkdir -p $namespace
 
-     for object_kind in configmap ingress service secret deployment statefulset hpa job cronjob
+     for object_kind in configmap ingress service secret deployment cronjob
      do
        get_${object_kind} ${namespace} > ${namespace}/${object_kind}.${namespace}.yaml 2>/dev/null &&  echo "${object_kind}.${namespace}";
      done
