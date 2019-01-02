@@ -31,18 +31,37 @@ function get_cronjob {
   kubectl get cronjob -n ${1} -o=yaml --export | sed -e '/kubectl\.kubernetes\.io\/last\-applied\-configuration:/,+1d' -e '/status:/,+1d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
+function get_pvc {
+  kubectl get pvc -n ${1} -o=yaml --export | sed -e '/control\-plane\.alpha\.kubernetes\.io\/leader\:/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+}
+
+function get_pv {
+  for pvolume in `kubectl get pvc -n ${1} -o=custom-columns=:.spec.volumeName` 
+  do
+     kubectl get pv -o=yaml --export --field-selector metadata.name=${pvolume} | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+  done
+}
+
 function export_ns {
   mkdir -p ${BACKUP_DIR}/${CLUSTER_NAME}/
   cd ${BACKUP_DIR}/${CLUSTER_NAME}/
-  for namespace in `kubectl get namespaces --no-headers=true | awk '{ print $1 }'`
+  for namespace in `kubectl get namespaces --no-headers=true | awk '{ print $1 }' | grep -v -e "cattle-system" -e "kube-system" -e "kube-public"`
   do
      echo "Namespace: $namespace"
      echo "+++++++++++++++++++++++++"
      mkdir -p $namespace
 
-     for object_kind in configmap ingress service secret deployment cronjob
+     for object_kind in configmap ingress service secret deployment cronjob pvc
      do
-       get_${object_kind} ${namespace} > ${namespace}/${object_kind}.${namespace}.yaml 2>/dev/null &&  echo "${object_kind}.${namespace}";
+       if kubectl get ${object_kind} -n ${namespace} 2>&1 | grep "No resources" > /dev/null; then
+         echo "No resources found for ${object_kind} in ${namespace}"
+       else
+         get_${object_kind} ${namespace} > ${namespace}/${object_kind}.${namespace}.yaml &&  echo "${object_kind}.${namespace}";
+         
+         if [ ${object_kind} = "pvc" ]; then
+           get_pv ${namespace} > ${namespace}/pv.${namespace}.yaml &&  echo "pv.${namespace}";
+         fi
+       fi
      done
      echo "+++++++++++++++++++++++++"
   done
