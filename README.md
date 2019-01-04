@@ -1,6 +1,14 @@
 # k8s-backup
-Kubernetes backup solution by exporting all k8s-components into YAML files and Uploading them to S3 Bucket.
-It will encrypt these backups and upload them to an S3 bucket.
+Kubernetes backup solution by exporting all k8s-components into YAML files and Uploading them to S3 Bucket archived and encrypted with a password.
+
+- The following K8s components/objects are extracted:
+  - Secrets
+  - Config Maps
+  - Deployments
+  - Services
+  - Ingress
+  - Persistent Volumes
+  - Cronjobs
 
 ## Usage
 ```
@@ -14,4 +22,15 @@ docker run -it \
 k8s-backup:latest
 ```
 
-To decrypt the backup run `openssl enc -aes-256-cbc -d -in name.tar.gz.enc | tar xz`.
+To decrypt the backup/archive run `openssl enc -aes-256-cbc -d -in name.tar.gz.enc | tar xz`.
+
+## Development
+
+This project is hosted at https://github.com/ambient-innovation/k8s-backup
+
+The docker image is hosted on dockerhub at https://hub.docker.com/r/ambientinnovation/k8s-backup.
+
+To make changes, proceed as follows:
+
+1. Make your changes to the code, just push to the repo. It is configured as automated build. The branch
+"master" will receive the tag "latest" and each Git Tag will create a corresponding docker tag.
