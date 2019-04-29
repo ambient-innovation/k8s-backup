@@ -45,7 +45,7 @@ function get_pv {
 function export_ns {
   mkdir -p ${BACKUP_DIR}/${CLUSTER_NAME}/
   cd ${BACKUP_DIR}/${CLUSTER_NAME}/
-  for namespace in `kubectl get namespaces --no-headers=true | awk '{ print $1 }' | grep -v -e "cattle-system" -e "kube-system" -e "kube-public"`
+  for namespace in `kubectl get namespaces --no-headers=true | awk '{ print $1 }' | grep -v -e "cattle-prometheus" -e "cattle-system" -e "kube-system" -e "kube-public"`
   do
      echo "Namespace: $namespace"
      echo "+++++++++++++++++++++++++"
