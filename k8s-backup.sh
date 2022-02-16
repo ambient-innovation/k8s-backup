@@ -3,42 +3,43 @@
 
 # Global Configurations
 #======================
+set -e
 BACKUP_DIR=/usr/local/backup
 AWS_CMD=/usr/bin/aws
 TIME_STAMP=$(date +%Y-%m-%d_%H-%M)
 ######################
 function get_secret {
-  kubectl get secret -n ${1} -o=yaml --export --field-selector type!=kubernetes.io/service-account-token | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+  kubectl get secret -n ${1} -o=yaml --field-selector type!=kubernetes.io/service-account-token | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
 function get_configmap {
-  kubectl get configmap -n ${1} -o=yaml --export | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+  kubectl get configmap -n ${1} -o=yaml | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
 function get_ingress {
-  kubectl get ing -n ${1} -o=yaml --export | sed -e '/status:/,+2d' -e '/\- ip: \([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+  kubectl get ing -n ${1} -o=yaml | sed -e '/status:/,+2d' -e '/\- ip: \([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
 function get_service {
-  kubectl get service -n ${1} -o=yaml --export | sed -e '/ownerReferences:/,+5d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/clusterIP: \([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}/d' 
+  kubectl get service -n ${1} -o=yaml | sed -e '/ownerReferences:/,+5d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/clusterIP: \([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}/d'
 }
 
 function get_deployment {
-  kubectl get deployment -n ${1} -o=yaml --export | sed -e '/deployment\.kubernetes\.io\/revision: "[0-9]\+"/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/status:/,+18d'
+  kubectl get deployment -n ${1} -o=yaml | sed -e '/deployment\.kubernetes\.io\/revision: "[0-9]\+"/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/status:/,+18d'
 }
 
 function get_cronjob {
-  kubectl get cronjob -n ${1} -o=yaml --export | sed -e '/status:/,+1d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+  kubectl get cronjob -n ${1} -o=yaml | sed -e '/status:/,+1d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
 function get_pvc {
-  kubectl get pvc -n ${1} -o=yaml --export | sed -e '/control\-plane\.alpha\.kubernetes\.io\/leader\:/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+  kubectl get pvc -n ${1} -o=yaml | sed -e '/control\-plane\.alpha\.kubernetes\.io\/leader\:/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
 }
 
 function get_pv {
   for pvolume in `kubectl get pvc -n ${1} -o=custom-columns=:.spec.volumeName` 
   do
-     kubectl get pv -o=yaml --export --field-selector metadata.name=${pvolume} | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
+     kubectl get pv -o=yaml --field-selector metadata.name=${pvolume} | sed -e '/resourceVersion: "[0-9]\+"/d' -e '/uid: [a-z0-9-]\+/d' -e '/selfLink: [a-z0-9A-Z/]\+/d'
   done
 }
 
@@ -89,7 +90,15 @@ function upload_backup_to_s3 {
   fi
 }
 
+# Execute Healthcheck Ping
+function healthcheck_ping {
+  if [ -n "${HEALTHCHECK_URL}" ]; then
+    curl -m 10 --retry 5 "${HEALTHCHECK_URL}";
+  fi
+}
+
 ###########
 export_ns
 archive_ns
 upload_backup_to_s3
+healthcheck_ping
