@@ -1,5 +1,7 @@
 # k8s-backup
-Kubernetes backup solution by exporting all k8s-components into YAML files and Uploading them to S3 Bucket archived and encrypted with a password.
+Kubernetes backup solution by exporting all k8s-components into YAML files and Uploading them to S3 Bucket archived and encrypted with a password. 
+
+Optionally an url for a healthcheck can get defined ($HEALTHCHECK_URL).
 
 - The following K8s components/objects are extracted:
   - Secrets
@@ -18,6 +20,7 @@ docker run -it \
 -e AWS_SECRET_ACCESS_KEY=my-aws-secret-key \
 -e CLUSTER_NAME=my-cluster-name \
 -e KUBE_ARCHIVE_PW=my-secret-password \
+-e HEALTHCHECK_URL=https://hc-ping.com/your-uuid-here
 -v path-to-kube-config-dir:/root/.kube \
 k8s-backup:latest
 ```
