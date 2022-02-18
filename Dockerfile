@@ -4,10 +4,10 @@ ENV TZ Europe/Berlin
 WORKDIR /srv
 
 RUN apk update && apk add --no-cache bash \
-    tzdata less python curl mlocate groff openssl
+    tzdata less python3 curl mlocate groff openssl
 
 RUN curl -O https://bootstrap.pypa.io/get-pip.py \
-    && python get-pip.py \
+    && python3 get-pip.py \
     && rm -f get-pip.py
 
 RUN cp /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
